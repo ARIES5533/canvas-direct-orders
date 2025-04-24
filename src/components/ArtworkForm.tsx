@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,10 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Image, Upload } from 'lucide-react';
+import { Image } from 'lucide-react';
 
-// Update the schema to make all fields required for new artwork but optional for updates
-const formSchema = z.object({
+// Create a schema for new artwork (all fields required)
+const newArtworkSchema = z.object({
   title: z.string().min(2, 'Title is required'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   imageUrl: z.string().url('Please enter a valid image URL'),
@@ -25,9 +24,24 @@ const formSchema = z.object({
   category: z.enum(['landscape', 'portrait', 'abstract', 'still-life'] as const),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+// Create a schema for updating artwork (all fields optional)
+const updateArtworkSchema = z.object({
+  title: z.string().min(2, 'Title is required').optional(),
+  description: z.string().min(10, 'Description must be at least 10 characters').optional(),
+  imageUrl: z.string().url('Please enter a valid image URL').optional(),
+  dimensions: z.string().min(2, 'Dimensions are required').optional(),
+  medium: z.string().min(2, 'Medium is required').optional(),
+  price: z.coerce.number().positive('Price must be a positive number').optional(),
+  available: z.boolean().optional(),
+  featured: z.boolean().optional(),
+  category: z.enum(['landscape', 'portrait', 'abstract', 'still-life'] as const).optional(),
+});
 
-// Define two different types of submit handlers to match the context
+// Use different types based on whether we're creating or updating
+type NewArtworkFormValues = z.infer<typeof newArtworkSchema>;
+type UpdateArtworkFormValues = z.infer<typeof updateArtworkSchema>;
+
+// Define two different types of submit handlers
 type NewArtworkSubmitHandler = (data: Omit<Artwork, 'id' | 'createdAt'>) => void;
 type UpdateArtworkSubmitHandler = (data: Partial<Artwork>) => void;
 
@@ -39,8 +53,14 @@ interface ArtworkFormProps {
 
 const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(artwork?.imageUrl || null);
-
-  const form = useForm<FormValues>({
+  
+  // Determine if this is an update or creation form
+  const isUpdate = !!artwork;
+  
+  // Use the appropriate schema based on whether we're creating or updating
+  const formSchema = isUpdate ? updateArtworkSchema : newArtworkSchema;
+  
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: artwork?.title || '',
@@ -51,7 +71,7 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
       price: artwork?.price || 0,
       available: artwork?.available ?? true,
       featured: artwork?.featured ?? false,
-      category: artwork?.category as Category || 'landscape',
+      category: (artwork?.category as Category) || 'landscape',
     },
   });
 
@@ -61,8 +81,14 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
     setPreviewUrl(url);
   };
 
-  const handleFormSubmit = (data: FormValues) => {
-    onSubmit(data);
+  const handleFormSubmit = (data: any) => {
+    if (isUpdate) {
+      // For updates, pass data as is (partial)
+      onSubmit(data);
+    } else {
+      // For new artwork, ensure all required fields are present
+      onSubmit(data as Omit<Artwork, 'id' | 'createdAt'>);
+    }
   };
 
   return (

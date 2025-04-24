@@ -1,3 +1,4 @@
+
 export interface Artwork {
   id: string;
   title: string;
@@ -22,7 +23,7 @@ export interface Order {
   createdAt: string;
 }
 
-export type Category = 'landscape' | 'portrait' | 'abstract' | 'still-life';
+export type Category = 'all' | 'landscape' | 'portrait' | 'abstract' | 'still-life';
 
 export interface ArtworkContextType {
   artworks: Artwork[];
