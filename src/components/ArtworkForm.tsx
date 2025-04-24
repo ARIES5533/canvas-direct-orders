@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Artwork } from '@/lib/types';
+import { Artwork, Category } from '@/lib/types';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Image, Upload } from 'lucide-react';
 
+// Update the schema to make all fields required for new artwork but optional for updates
 const formSchema = z.object({
   title: z.string().min(2, 'Title is required'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
@@ -21,14 +22,18 @@ const formSchema = z.object({
   price: z.coerce.number().positive('Price must be a positive number'),
   available: z.boolean(),
   featured: z.boolean(),
-  category: z.enum(['landscape', 'portrait', 'abstract', 'still-life']),
+  category: z.enum(['landscape', 'portrait', 'abstract', 'still-life'] as const),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
+// Define two different types of submit handlers to match the context
+type NewArtworkSubmitHandler = (data: Omit<Artwork, 'id' | 'createdAt'>) => void;
+type UpdateArtworkSubmitHandler = (data: Partial<Artwork>) => void;
+
 interface ArtworkFormProps {
   artwork?: Artwork;
-  onSubmit: (data: FormValues) => void;
+  onSubmit: NewArtworkSubmitHandler | UpdateArtworkSubmitHandler;
   isLoading?: boolean;
 }
 
@@ -46,7 +51,7 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
       price: artwork?.price || 0,
       available: artwork?.available ?? true,
       featured: artwork?.featured ?? false,
-      category: artwork?.category as any || 'landscape',
+      category: artwork?.category as Category || 'landscape',
     },
   });
 
@@ -56,9 +61,13 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
     setPreviewUrl(url);
   };
 
+  const handleFormSubmit = (data: FormValues) => {
+    onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             {/* Image Preview */}

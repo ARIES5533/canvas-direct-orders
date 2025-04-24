@@ -58,6 +58,24 @@ const AdminPage = () => {
     navigate('/login');
   };
 
+  // Create a type-safe wrapper around addArtwork to ensure form data is complete
+  const handleAddArtwork = (data: any) => {
+    // Ensure all required fields are present
+    const newArtwork = {
+      title: data.title,
+      description: data.description,
+      imageUrl: data.imageUrl,
+      dimensions: data.dimensions,
+      medium: data.medium,
+      price: data.price,
+      available: data.available,
+      featured: data.featured,
+      category: data.category,
+    };
+    
+    addArtwork(newArtwork);
+  };
+
   return (
     <div className="page-container">
       <div className="flex justify-between items-center mb-8">
@@ -78,7 +96,7 @@ const AdminPage = () => {
               <DialogHeader>
                 <DialogTitle>Add New Artwork</DialogTitle>
               </DialogHeader>
-              <ArtworkForm onSubmit={addArtwork} />
+              <ArtworkForm onSubmit={handleAddArtwork} />
             </DialogContent>
           </Dialog>
         </div>
