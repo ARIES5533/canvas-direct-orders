@@ -1,18 +1,15 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Artwork, Category } from '@/lib/types';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Image, Upload } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from '@/hooks/use-toast';
+import ArtworkImagePreview from './artwork/ArtworkImagePreview';
+import ArtworkDetailsFields from './artwork/ArtworkDetailsFields';
 
 // Create a schema for new artwork (all fields required)
 const newArtworkSchema = z.object({
@@ -45,13 +42,7 @@ interface ArtworkFormProps {
 }
 
 const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(artwork?.imageUrl || null);
-  const [fileUploadUrl, setFileUploadUrl] = useState<string>('');
-  
-  // Determine if this is an update or creation form
   const isUpdate = !!artwork;
-  
-  // Use the appropriate schema based on whether we're creating or updating
   const formSchema = isUpdate ? updateArtworkSchema : newArtworkSchema;
   
   const form = useForm({
@@ -69,135 +60,22 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
     },
   });
 
-  // Effect to validate and update preview when imageUrl changes
-  useEffect(() => {
-    const imageUrl = form.watch('imageUrl');
-    if (imageUrl && imageUrl !== previewUrl) {
-      // Validate URL format
-      try {
-        // Provide an empty string argument to the URL constructor if imageUrl is not already a valid URL
-        const url = imageUrl.trim() ? new URL(imageUrl) : null;
-        
-        if (url) {
-          const img = new Image();
-          img.onload = () => setPreviewUrl(imageUrl);
-          img.onerror = () => {
-            console.error('Failed to load image');
-            toast({
-              title: "Image Error",
-              description: "Failed to load image from the provided URL",
-              variant: "destructive"
-            });
-          };
-          img.src = imageUrl;
-        }
-      } catch (e) {
-        console.log('Invalid URL format');
-      }
-    }
-  }, [form.watch('imageUrl'), previewUrl]);
-
-  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value;
+  const handleImageUrlChange = (url: string) => {
     form.setValue('imageUrl', url);
-    // Preview is now handled by the useEffect
-  };
-  
-  // Helper function to handle image upload
-  const simulateFileUpload = () => {
-    if (fileUploadUrl) {
-      try {
-        // Fix: Provide a string argument to the URL constructor
-        new URL(fileUploadUrl);
-        form.setValue('imageUrl', fileUploadUrl);
-        // Preview will be updated by the useEffect
-        setFileUploadUrl('');
-        toast({
-          title: "Image URL Added",
-          description: "Image URL has been added to the form"
-        });
-      } catch (e) {
-        console.error('Invalid URL format');
-        form.setError('imageUrl', { 
-          type: 'manual', 
-          message: 'Please enter a valid image URL' 
-        });
-        toast({
-          title: "Invalid URL",
-          description: "Please enter a valid image URL",
-          variant: "destructive"
-        });
-      }
-    }
-  };
-
-  const handleFormSubmit = (data: any) => {
-    if (isUpdate) {
-      // For updates, pass data as is (partial)
-      (onSubmit as UpdateArtworkSubmitHandler)(data);
-    } else {
-      // For new artwork, ensure all required fields are present
-      (onSubmit as NewArtworkSubmitHandler)(data as Omit<Artwork, 'id' | 'createdAt'>);
-    }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <ScrollArea className="h-[65vh] pr-2">
           <div className="space-y-8 pr-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                {/* Image Preview */}
-                <div className="mb-6">
-                  <div className="border rounded-md p-4 bg-gray-50">
-                    {previewUrl ? (
-                      <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-gray-100">
-                        <img 
-                          src={previewUrl} 
-                          alt="Preview" 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            // Handle image load errors
-                            console.error('Image failed to load');
-                            (e.target as HTMLImageElement).src = 'https://placehold.co/600x800?text=Image+Not+Found';
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-[3/4] bg-gray-100 flex items-center justify-center rounded-md">
-                        <Image className="w-12 h-12 text-gray-400" />
-                        <span className="sr-only">Image preview</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Quick Upload Option */}
-                <div className="mb-6">
-                  <FormLabel>Quick Image Upload</FormLabel>
-                  <div className="flex mt-2">
-                    <Input 
-                      placeholder="Paste image URL here" 
-                      value={fileUploadUrl}
-                      onChange={(e) => setFileUploadUrl(e.target.value)}
-                      className="flex-1 mr-2"
-                    />
-                    <Button 
-                      type="button" 
-                      variant="secondary" 
-                      onClick={simulateFileUpload}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload
-                    </Button>
-                  </div>
-                  <FormDescription className="text-xs mt-1">
-                    Enter an image URL and click Upload to preview
-                  </FormDescription>
-                </div>
-                
-                {/* Image URL */}
+                <ArtworkImagePreview
+                  imageUrl={form.watch('imageUrl')}
+                  onImageUrlChange={handleImageUrlChange}
+                />
+
                 <FormField
                   control={form.control}
                   name="imageUrl"
@@ -205,21 +83,13 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
                     <FormItem>
                       <FormLabel>Image URL</FormLabel>
                       <FormControl>
-                        <div className="flex">
-                          <Input 
-                            {...field}
-                            placeholder="https://example.com/image.jpg" 
-                            onChange={handleImageUrlChange} 
-                          />
-                        </div>
+                        <Input {...field} placeholder="https://example.com/image.jpg" />
                       </FormControl>
-                      <FormDescription>Enter a valid URL for your artwork image</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
-                {/* Title */}
+
                 <FormField
                   control={form.control}
                   name="title"
@@ -233,8 +103,7 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
                     </FormItem>
                   )}
                 />
-                
-                {/* Category */}
+
                 <FormField
                   control={form.control}
                   name="category"
@@ -262,117 +131,9 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
                   )}
                 />
               </div>
-              
-              <div className="space-y-6">
-                {/* Description */}
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          {...field} 
-                          placeholder="Describe your artwork..." 
-                          rows={4}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {/* Medium */}
-                <FormField
-                  control={form.control}
-                  name="medium"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Medium</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Oil on canvas" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {/* Dimensions */}
-                <FormField
-                  control={form.control}
-                  name="dimensions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dimensions</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder='24" x 36"' />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {/* Price */}
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Price (USD)</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="number" min="0" step="0.01" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Available */}
-                  <FormField
-                    control={form.control}
-                    name="available"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                        <div className="space-y-0.5">
-                          <FormLabel>Available</FormLabel>
-                          <FormDescription className="text-xs">
-                            Mark as available for purchase
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {/* Featured */}
-                  <FormField
-                    control={form.control}
-                    name="featured"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                        <div className="space-y-0.5">
-                          <FormLabel>Featured</FormLabel>
-                          <FormDescription className="text-xs">
-                            Show on homepage
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
+
+              <div>
+                <ArtworkDetailsFields form={form} />
               </div>
             </div>
           </div>
