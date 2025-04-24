@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,17 +26,7 @@ const newArtworkSchema = z.object({
 });
 
 // Create a schema for updating artwork (all fields optional)
-const updateArtworkSchema = z.object({
-  title: z.string().min(2, 'Title is required').optional(),
-  description: z.string().min(10, 'Description must be at least 10 characters').optional(),
-  imageUrl: z.string().url('Please enter a valid image URL').optional(),
-  dimensions: z.string().min(2, 'Dimensions are required').optional(),
-  medium: z.string().min(2, 'Medium is required').optional(),
-  price: z.coerce.number().positive('Price must be a positive number').optional(),
-  available: z.boolean().optional(),
-  featured: z.boolean().optional(),
-  category: z.enum(['landscape', 'portrait', 'abstract', 'still-life'] as const).optional(),
-});
+const updateArtworkSchema = newArtworkSchema.partial();
 
 // Use different types based on whether we're creating or updating
 type NewArtworkFormValues = z.infer<typeof newArtworkSchema>;
@@ -77,30 +67,55 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
     },
   });
 
+  // Effect to validate and update preview when imageUrl changes
+  useEffect(() => {
+    const imageUrl = form.watch('imageUrl');
+    if (imageUrl && imageUrl !== previewUrl) {
+      // Check if it's a valid URL before setting preview
+      try {
+        new URL(imageUrl);
+        const img = new Image();
+        img.onload = () => setPreviewUrl(imageUrl);
+        img.onerror = () => console.error('Failed to load image');
+        img.src = imageUrl;
+      } catch (e) {
+        console.log('Invalid URL format');
+      }
+    }
+  }, [form.watch('imageUrl'), previewUrl]);
+
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
     form.setValue('imageUrl', url);
-    setPreviewUrl(url);
+    // Preview is now handled by the useEffect
   };
   
-  // Helper function to simulate image upload
+  // Helper function to handle image upload
   const simulateFileUpload = () => {
-    // In a real app, this would handle actual file upload to a server or CDN
-    // For now, we're just using a placeholder URL based on user input
     if (fileUploadUrl) {
-      form.setValue('imageUrl', fileUploadUrl);
-      setPreviewUrl(fileUploadUrl);
-      setFileUploadUrl('');
+      try {
+        // Validate URL
+        new URL(fileUploadUrl);
+        form.setValue('imageUrl', fileUploadUrl);
+        // Preview will be updated by the useEffect
+        setFileUploadUrl('');
+      } catch (e) {
+        console.error('Invalid URL format');
+        form.setError('imageUrl', { 
+          type: 'manual', 
+          message: 'Please enter a valid image URL' 
+        });
+      }
     }
   };
 
   const handleFormSubmit = (data: any) => {
     if (isUpdate) {
       // For updates, pass data as is (partial)
-      onSubmit(data);
+      (onSubmit as UpdateArtworkSubmitHandler)(data);
     } else {
       // For new artwork, ensure all required fields are present
-      onSubmit(data as Omit<Artwork, 'id' | 'createdAt'>);
+      (onSubmit as NewArtworkSubmitHandler)(data as Omit<Artwork, 'id' | 'createdAt'>);
     }
   };
 
@@ -114,7 +129,16 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
               <div className="border rounded-md p-4 bg-gray-50">
                 {previewUrl ? (
                   <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-gray-100">
-                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <img 
+                      src={previewUrl} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Handle image load errors
+                        console.error('Image failed to load');
+                        (e.target as HTMLImageElement).src = 'https://placehold.co/600x800?text=Image+Not+Found';
+                      }}
+                    />
                   </div>
                 ) : (
                   <div className="aspect-[3/4] bg-gray-100 flex items-center justify-center rounded-md">

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import ArtworkActions from "./ArtworkActions";
+import { useState } from "react";
 
 interface ArtworkTableProps {
   artworks: Artwork[];
@@ -18,6 +19,16 @@ interface ArtworkTableProps {
 }
 
 const ArtworkTable = ({ artworks, onUpdate, onDelete }: ArtworkTableProps) => {
+  // Track image loading errors
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
+  const handleImageError = (artworkId: string) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [artworkId]: true
+    }));
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -43,11 +54,12 @@ const ArtworkTable = ({ artworks, onUpdate, onDelete }: ArtworkTableProps) => {
             artworks.map((artwork) => (
               <TableRow key={artwork.id}>
                 <TableCell>
-                  <div className="h-16 w-16 bg-gray-100">
+                  <div className="h-16 w-16 bg-gray-100 overflow-hidden">
                     <img
-                      src={artwork.imageUrl}
+                      src={imageErrors[artwork.id] ? 'https://placehold.co/600x800?text=No+Image' : artwork.imageUrl}
                       alt={artwork.title}
                       className="h-full w-full object-cover"
+                      onError={() => handleImageError(artwork.id)}
                     />
                   </div>
                 </TableCell>

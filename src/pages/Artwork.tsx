@@ -12,11 +12,13 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowLeft } from "lucide-react";
 import OrderForm from "@/components/OrderForm";
+import { useState } from "react";
 
 const ArtworkPage = () => {
   const { id } = useParams<{ id: string }>();
   const { getArtworkById } = useArtwork();
   const navigate = useNavigate();
+  const [imageError, setImageError] = useState(false);
   
   const artwork = getArtworkById(id!);
   
@@ -50,11 +52,12 @@ const ArtworkPage = () => {
       
       <div className="grid md:grid-cols-2 gap-12">
         <div className="bg-gray-50 rounded-md p-2">
-          <div className="aspect-[3/4] bg-white">
+          <div className="aspect-[3/4] bg-white flex items-center justify-center">
             <img 
-              src={artwork.imageUrl} 
+              src={imageError ? 'https://placehold.co/600x800?text=Image+Not+Available' : artwork.imageUrl} 
               alt={artwork.title} 
               className="w-full h-full object-contain"
+              onError={() => setImageError(true)}
             />
           </div>
         </div>
