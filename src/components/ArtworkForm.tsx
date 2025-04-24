@@ -73,21 +73,24 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
   useEffect(() => {
     const imageUrl = form.watch('imageUrl');
     if (imageUrl && imageUrl !== previewUrl) {
-      // Check if it's a valid URL before setting preview
+      // Validate URL format
       try {
-        // Fix: Provide a string argument to the URL constructor
-        new URL(imageUrl);
-        const img = new Image();
-        img.onload = () => setPreviewUrl(imageUrl);
-        img.onerror = () => {
-          console.error('Failed to load image');
-          toast({
-            title: "Image Error",
-            description: "Failed to load image from the provided URL",
-            variant: "destructive"
-          });
-        };
-        img.src = imageUrl;
+        // Provide an empty string argument to the URL constructor if imageUrl is not already a valid URL
+        const url = imageUrl.trim() ? new URL(imageUrl) : null;
+        
+        if (url) {
+          const img = new Image();
+          img.onload = () => setPreviewUrl(imageUrl);
+          img.onerror = () => {
+            console.error('Failed to load image');
+            toast({
+              title: "Image Error",
+              description: "Failed to load image from the provided URL",
+              variant: "destructive"
+            });
+          };
+          img.src = imageUrl;
+        }
       } catch (e) {
         console.log('Invalid URL format');
       }
