@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Image } from 'lucide-react';
+import { Image, Upload } from 'lucide-react';
 
 // Create a schema for new artwork (all fields required)
 const newArtworkSchema = z.object({
@@ -53,6 +54,7 @@ interface ArtworkFormProps {
 
 const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(artwork?.imageUrl || null);
+  const [fileUploadUrl, setFileUploadUrl] = useState<string>('');
   
   // Determine if this is an update or creation form
   const isUpdate = !!artwork;
@@ -80,6 +82,17 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
     form.setValue('imageUrl', url);
     setPreviewUrl(url);
   };
+  
+  // Helper function to simulate image upload
+  const simulateFileUpload = () => {
+    // In a real app, this would handle actual file upload to a server or CDN
+    // For now, we're just using a placeholder URL based on user input
+    if (fileUploadUrl) {
+      form.setValue('imageUrl', fileUploadUrl);
+      setPreviewUrl(fileUploadUrl);
+      setFileUploadUrl('');
+    }
+  };
 
   const handleFormSubmit = (data: any) => {
     if (isUpdate) {
@@ -93,7 +106,7 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8 overflow-y-auto max-h-[70vh] pr-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             {/* Image Preview */}
@@ -110,6 +123,30 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
                   </div>
                 )}
               </div>
+            </div>
+            
+            {/* Quick Upload Option */}
+            <div className="mb-6">
+              <FormLabel>Quick Image Upload</FormLabel>
+              <div className="flex mt-2">
+                <Input 
+                  placeholder="Paste image URL here" 
+                  value={fileUploadUrl}
+                  onChange={(e) => setFileUploadUrl(e.target.value)}
+                  className="flex-1 mr-2"
+                />
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  onClick={simulateFileUpload}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload
+                </Button>
+              </div>
+              <FormDescription className="text-xs mt-1">
+                Enter an image URL and click Upload to preview
+              </FormDescription>
             </div>
             
             {/* Image URL */}
