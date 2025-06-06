@@ -18,18 +18,19 @@ const ArtworkImagePreview = ({ imageUrl, onImageUrlChange }: ArtworkImagePreview
   useEffect(() => {
     if (imageUrl && imageUrl !== previewUrl) {
       try {
-        const url = new URL(imageUrl);
-        const img = new Image();
-        img.onload = () => setPreviewUrl(imageUrl);
-        img.onerror = () => {
-          console.error('Failed to load image');
-          toast({
-            title: "Image Error",
-            description: "Failed to load image from the provided URL",
-            variant: "destructive"
-          });
-        };
-        img.src = imageUrl;
+        if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
+          const img = new Image();
+          img.onload = () => setPreviewUrl(imageUrl);
+          img.onerror = () => {
+            console.error('Failed to load image');
+            toast({
+              title: "Image Error",
+              description: "Failed to load image from the provided URL",
+              variant: "destructive"
+            });
+          };
+          img.src = imageUrl;
+        }
       } catch (e) {
         console.log('Invalid URL format');
       }
@@ -39,18 +40,21 @@ const ArtworkImagePreview = ({ imageUrl, onImageUrlChange }: ArtworkImagePreview
   const handleQuickUpload = () => {
     if (fileUploadUrl) {
       try {
-        new URL(fileUploadUrl);
-        onImageUrlChange(fileUploadUrl);
-        setFileUploadUrl('');
-        toast({
-          title: "Image URL Added",
-          description: "Image URL has been added to the form"
-        });
+        if (fileUploadUrl.startsWith('http') || fileUploadUrl.startsWith('https')) {
+          onImageUrlChange(fileUploadUrl);
+          setFileUploadUrl('');
+          toast({
+            title: "Image URL Added",
+            description: "Image URL has been added to the form"
+          });
+        } else {
+          throw new Error('Invalid URL');
+        }
       } catch (e) {
         console.error('Invalid URL format');
         toast({
           title: "Invalid URL",
-          description: "Please enter a valid image URL",
+          description: "Please enter a valid image URL starting with http:// or https://",
           variant: "destructive"
         });
       }
