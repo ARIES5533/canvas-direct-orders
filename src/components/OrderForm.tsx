@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import { MessageCircle } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -35,6 +35,20 @@ const OrderForm = ({ artworkId, artworkTitle }: OrderFormProps) => {
       message: `I'm interested in purchasing "${artworkTitle}".`,
     },
   });
+
+  const sendToWhatsApp = (data: FormValues) => {
+    const whatsappMessage = `Hi! I'm interested in purchasing "${artworkTitle}"\n\nName: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone}\n\nMessage: ${data.message}`;
+    
+    const encodedMessage = encodeURIComponent(whatsappMessage);
+    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+    
+    toast({
+      title: "Opening WhatsApp",
+      description: "Your message has been prepared. Just hit send in WhatsApp!",
+    });
+  };
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
@@ -121,9 +135,21 @@ const OrderForm = ({ artworkId, artworkTitle }: OrderFormProps) => {
           )}
         />
         
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Submitting...' : 'Submit Order Inquiry'}
-        </Button>
+        <div className="space-y-3">
+          <Button 
+            type="button"
+            onClick={() => sendToWhatsApp(form.getValues())}
+            className="w-full bg-green-600 hover:bg-green-700"
+            disabled={!form.formState.isValid}
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Send via WhatsApp
+          </Button>
+          
+          <Button type="submit" variant="outline" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting...' : 'Submit Order Inquiry'}
+          </Button>
+        </div>
       </form>
     </Form>
   );
