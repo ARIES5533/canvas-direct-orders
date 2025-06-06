@@ -1,10 +1,10 @@
 
-import { Image as ImageIcon } from 'lucide-react';
+import { ImageIcon, Upload } from 'lucide-react';
 import { FormDescription, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ArtworkImagePreviewProps {
   imageUrl: string;
@@ -14,12 +14,13 @@ interface ArtworkImagePreviewProps {
 const ArtworkImagePreview = ({ imageUrl, onImageUrlChange }: ArtworkImagePreviewProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(imageUrl || null);
   const [fileUploadUrl, setFileUploadUrl] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (imageUrl && imageUrl !== previewUrl) {
       try {
-        if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
-          const img = new Image();
+        if (imageUrl.startsWith('http') || imageUrl.startsWith('https') || imageUrl.startsWith('blob:') || imageUrl.startsWith('data:')) {
+          const img = new globalThis.Image();
           img.onload = () => setPreviewUrl(imageUrl);
           img.onerror = () => {
             console.error('Failed to load image');
@@ -36,6 +37,39 @@ const ArtworkImagePreview = ({ imageUrl, onImageUrlChange }: ArtworkImagePreview
       }
     }
   }, [imageUrl, previewUrl]);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid File",
+          description: "Please select an image file",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create object URL for preview
+      const objectUrl = URL.createObjectURL(file);
+      onImageUrlChange(objectUrl);
+      toast({
+        title: "Image Uploaded",
+        description: "Image has been uploaded successfully"
+      });
+    }
+  };
 
   const handleQuickUpload = () => {
     if (fileUploadUrl) {
@@ -86,7 +120,32 @@ const ArtworkImagePreview = ({ imageUrl, onImageUrlChange }: ArtworkImagePreview
       </div>
 
       <div className="mb-6">
-        <FormLabel>Quick Image Upload</FormLabel>
+        <FormLabel>Upload Image from Device</FormLabel>
+        <div className="mt-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Choose Image from Device
+          </Button>
+        </div>
+        <FormDescription className="text-xs mt-1">
+          Select an image file from your device (max 5MB)
+        </FormDescription>
+      </div>
+
+      <div className="mb-6">
+        <FormLabel>Or Add Image URL</FormLabel>
         <div className="flex mt-2">
           <Input 
             placeholder="Paste image URL here" 
@@ -99,11 +158,11 @@ const ArtworkImagePreview = ({ imageUrl, onImageUrlChange }: ArtworkImagePreview
             variant="secondary" 
             onClick={handleQuickUpload}
           >
-            Upload
+            Add URL
           </Button>
         </div>
         <FormDescription className="text-xs mt-1">
-          Enter an image URL and click Upload to preview
+          Enter an image URL and click Add URL to preview
         </FormDescription>
       </div>
     </div>
