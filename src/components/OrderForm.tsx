@@ -40,7 +40,9 @@ const OrderForm = ({ artworkId, artworkTitle }: OrderFormProps) => {
     const whatsappMessage = `Hi! I'm interested in purchasing "${artworkTitle}"\n\nName: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone}\n\nMessage: ${data.message}`;
     
     const encodedMessage = encodeURIComponent(whatsappMessage);
-    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    // Replace with your actual WhatsApp number (include country code without + or spaces)
+    const phoneNumber = "1234567890"; // Example: "1234567890" for US number
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     
     window.open(whatsappUrl, '_blank');
     
