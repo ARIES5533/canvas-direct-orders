@@ -1,5 +1,5 @@
 
-import { Image } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import { FormDescription, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -78,7 +78,7 @@ const ArtworkImagePreview = ({ imageUrl, onImageUrlChange }: ArtworkImagePreview
             </div>
           ) : (
             <div className="aspect-[3/4] bg-gray-100 flex items-center justify-center rounded-md">
-              <Image className="w-12 h-12 text-gray-400" />
+              <ImageIcon className="w-12 h-12 text-gray-400" />
               <span className="sr-only">Image preview</span>
             </div>
           )}
