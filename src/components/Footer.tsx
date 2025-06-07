@@ -10,7 +10,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="font-serif text-lg font-medium mb-4">Art Gallery</h3>
+            <h3 className="font-serif text-lg font-medium mb-4">Aries Gallery</h3>
             <p className="text-gray-600 max-w-xs">
               Featuring original paintings and commissioned artwork from a passionate artist.
             </p>
@@ -51,7 +51,7 @@ const Footer = () => {
         </div>
         
         <div className="mt-8 pt-6 border-t text-center text-gray-500 text-sm">
-          <p>&copy; {currentYear} Art Gallery. All rights reserved.</p>
+          <p>&copy; {currentYear} Aries Gallery. All rights reserved.</p>
         </div>
       </div>
     </footer>
