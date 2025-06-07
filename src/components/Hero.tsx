@@ -29,9 +29,9 @@ const Hero = () => {
             </div>
           </div>
           <div className="relative h-[50vh] md:h-[70vh] w-full order-1 md:order-2">
-            {heroArtwork ? (
+            {heroArtwork && heroArtwork.imageUrls[0] ? (
               <img 
-                src={heroArtwork.imageUrl} 
+                src={heroArtwork.imageUrls[0]} 
                 alt={heroArtwork.title} 
                 className="object-cover object-center h-full w-full animate-fade-in"
               />

@@ -8,14 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import ArtworkImagePreview from './artwork/ArtworkImagePreview';
+import ArtworkMultiImagePreview from './artwork/ArtworkMultiImagePreview';
 import ArtworkDetailsFields from './artwork/ArtworkDetailsFields';
 
 // Create a schema for new artwork (all fields required)
 const newArtworkSchema = z.object({
   title: z.string().min(2, 'Title is required'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  imageUrl: z.string().url('Please enter a valid image URL'),
+  imageUrls: z.array(z.string().url('Please enter valid image URLs')).min(1, 'At least one image is required'),
   dimensions: z.string().min(2, 'Dimensions are required'),
   medium: z.string().min(2, 'Medium is required'),
   price: z.coerce.number().positive('Price must be a positive number'),
@@ -50,7 +50,7 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
     defaultValues: {
       title: artwork?.title || '',
       description: artwork?.description || '',
-      imageUrl: artwork?.imageUrl || '',
+      imageUrls: artwork?.imageUrls || [],
       dimensions: artwork?.dimensions || '',
       medium: artwork?.medium || '',
       price: artwork?.price || 0,
@@ -60,8 +60,8 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
     },
   });
 
-  const handleImageUrlChange = (url: string) => {
-    form.setValue('imageUrl', url);
+  const handleImageUrlsChange = (urls: string[]) => {
+    form.setValue('imageUrls', urls);
   };
 
   return (
@@ -71,20 +71,15 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
           <div className="space-y-8 pr-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <ArtworkImagePreview
-                  imageUrl={form.watch('imageUrl')}
-                  onImageUrlChange={handleImageUrlChange}
-                />
-
                 <FormField
                   control={form.control}
-                  name="imageUrl"
+                  name="imageUrls"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image URL</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="https://example.com/image.jpg" />
-                      </FormControl>
+                      <ArtworkMultiImagePreview
+                        imageUrls={field.value}
+                        onImageUrlsChange={handleImageUrlsChange}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}

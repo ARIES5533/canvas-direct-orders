@@ -1,16 +1,15 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Artwork, ArtworkContextType } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 
-// Sample data
+// Sample data with multiple images
 const sampleArtworks: Artwork[] = [
   {
     id: '1',
     title: 'Sunset Serenity',
     description: 'A peaceful landscape capturing the golden hues of sunset over a serene lake.',
-    imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe',
+    imageUrls: ['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4'],
     dimensions: '24" x 36"',
     medium: 'Oil on canvas',
     price: 950,
@@ -23,7 +22,7 @@ const sampleArtworks: Artwork[] = [
     id: '2',
     title: 'Abstract Dreams',
     description: 'Vibrant colors and fluid forms create a dreamlike atmosphere in this abstract piece.',
-    imageUrl: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262',
+    imageUrls: ['https://images.unsplash.com/photo-1541961017774-22349e4a1262', 'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7'],
     dimensions: '30" x 40"',
     medium: 'Acrylic on canvas',
     price: 1200,
@@ -36,7 +35,7 @@ const sampleArtworks: Artwork[] = [
     id: '3',
     title: 'Portrait of Solitude',
     description: 'A contemplative portrait exploring themes of solitude and introspection.',
-    imageUrl: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9',
+    imageUrls: ['https://images.unsplash.com/photo-1578301978693-85fa9c0320b9'],
     dimensions: '18" x 24"',
     medium: 'Oil on canvas',
     price: 800,
@@ -49,7 +48,7 @@ const sampleArtworks: Artwork[] = [
     id: '4',
     title: 'Spring Blooms',
     description: 'A vibrant still life featuring spring flowers in full bloom.',
-    imageUrl: 'https://images.unsplash.com/photo-1464982326199-86f32f81b211',
+    imageUrls: ['https://images.unsplash.com/photo-1464982326199-86f32f81b211'],
     dimensions: '16" x 20"',
     medium: 'Watercolor',
     price: 650,
@@ -62,7 +61,7 @@ const sampleArtworks: Artwork[] = [
     id: '5',
     title: 'Mountain Majesty',
     description: 'Majestic mountains shrouded in morning mist, capturing the grandeur of nature.',
-    imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4',
+    imageUrls: ['https://images.unsplash.com/photo-1506905925346-21bda4d32df4', 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe'],
     dimensions: '36" x 48"',
     medium: 'Oil on canvas',
     price: 1400,
@@ -75,7 +74,7 @@ const sampleArtworks: Artwork[] = [
     id: '6',
     title: 'Urban Rhythms',
     description: 'An abstract interpretation of city life, with dynamic patterns and energetic colors.',
-    imageUrl: 'https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7',
+    imageUrls: ['https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7'],
     dimensions: '24" x 30"',
     medium: 'Mixed media on canvas',
     price: 1100,
@@ -85,6 +84,20 @@ const sampleArtworks: Artwork[] = [
     createdAt: '2024-02-22T13:40:00Z'
   }
 ];
+
+// Migration function to convert old data structure
+const migrateArtworkData = (artworks: any[]): Artwork[] => {
+  return artworks.map(artwork => {
+    if (artwork.imageUrl && !artwork.imageUrls) {
+      return {
+        ...artwork,
+        imageUrls: [artwork.imageUrl],
+        imageUrl: undefined
+      };
+    }
+    return artwork;
+  });
+};
 
 // Create the context
 const ArtworkContext = createContext<ArtworkContextType | null>(null);
@@ -100,11 +113,15 @@ export const useArtwork = () => {
 export const ArtworkProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
 
-  // Load sample data on initial render
+  // Load and migrate data on initial render
   useEffect(() => {
     const storedArtworks = localStorage.getItem('artworks');
     if (storedArtworks) {
-      setArtworks(JSON.parse(storedArtworks));
+      const parsed = JSON.parse(storedArtworks);
+      const migrated = migrateArtworkData(parsed);
+      setArtworks(migrated);
+      // Save migrated data back to localStorage
+      localStorage.setItem('artworks', JSON.stringify(migrated));
     } else {
       setArtworks(sampleArtworks);
       localStorage.setItem('artworks', JSON.stringify(sampleArtworks));
