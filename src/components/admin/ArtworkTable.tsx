@@ -56,7 +56,7 @@ const ArtworkTable = ({ artworks, onUpdate, onDelete }: ArtworkTableProps) => {
                 <TableCell>
                   <div className="h-16 w-16 bg-gray-100 overflow-hidden">
                     <img
-                      src={imageErrors[artwork.id] ? 'https://placehold.co/600x800?text=No+Image' : artwork.imageUrl}
+                      src={imageErrors[artwork.id] ? 'https://placehold.co/600x800?text=No+Image' : artwork.imageUrls[0] || 'https://placehold.co/600x800?text=No+Image'}
                       alt={artwork.title}
                       className="h-full w-full object-cover"
                       onError={() => handleImageError(artwork.id)}
