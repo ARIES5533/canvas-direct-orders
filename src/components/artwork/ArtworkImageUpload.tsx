@@ -79,7 +79,10 @@ const ArtworkImageUpload = ({ imageUrls, onImageUrlsChange }: ArtworkImageUpload
           type="button"
           variant="outline"
           disabled={uploading}
-          onClick={() => document.querySelector('input[type="file"]')?.click()}
+          onClick={() => {
+            const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+            fileInput?.click();
+          }}
         >
           <Upload className="h-4 w-4 mr-2" />
           {uploading ? 'Uploading...' : 'Upload Image'}
