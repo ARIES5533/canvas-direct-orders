@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import ArtworkMultiImagePreview from './artwork/ArtworkMultiImagePreview';
+import ArtworkImageUpload from './artwork/ArtworkImageUpload';
 import ArtworkDetailsFields from './artwork/ArtworkDetailsFields';
 
 // Create a schema for new artwork (all fields required)
@@ -76,10 +76,13 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
                   name="imageUrls"
                   render={({ field }) => (
                     <FormItem>
-                      <ArtworkMultiImagePreview
-                        imageUrls={field.value}
-                        onImageUrlsChange={handleImageUrlsChange}
-                      />
+                      <FormLabel>Images</FormLabel>
+                      <FormControl>
+                        <ArtworkImageUpload
+                          imageUrls={field.value}
+                          onImageUrlsChange={handleImageUrlsChange}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

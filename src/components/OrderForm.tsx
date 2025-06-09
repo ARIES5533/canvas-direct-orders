@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,8 +6,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
 import { MessageCircle } from 'lucide-react';
+import { useOrders } from '@/hooks/useOrders';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -24,7 +24,7 @@ interface OrderFormProps {
 }
 
 const OrderForm = ({ artworkId, artworkTitle }: OrderFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createOrder, isSubmitting } = useOrders();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -45,37 +45,18 @@ const OrderForm = ({ artworkId, artworkTitle }: OrderFormProps) => {
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     
     window.open(whatsappUrl, '_blank');
-    
-    toast({
-      title: "Opening WhatsApp",
-      description: "Your message has been prepared. Just hit send in WhatsApp!",
-    });
   };
 
   const onSubmit = async (data: FormValues) => {
-    setIsSubmitting(true);
-    try {
-      // In a real application, you would send this data to a server
-      console.log('Order submitted:', { ...data, artworkId });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Order inquiry submitted!",
-        description: "Thank you for your interest. We'll contact you shortly.",
-      });
-      
-      form.reset();
-    } catch (error) {
-      toast({
-        title: "Something went wrong",
-        description: "Your order couldn't be submitted. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    createOrder({
+      artworkId,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      message: data.message,
+    });
+    
+    form.reset();
   };
 
   return (
