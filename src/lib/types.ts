@@ -7,6 +7,7 @@ export interface Artwork {
   dimensions: string;
   medium: string;
   price: number;
+  currency: 'USD' | 'NGN';
   available: boolean;
   featured: boolean;
   category: string;
@@ -20,6 +21,19 @@ export interface Order {
   email: string;
   phone: string;
   message: string;
+  createdAt: string;
+}
+
+export interface Offer {
+  id: string;
+  artworkId: string;
+  name: string;
+  email: string;
+  phone: string;
+  offerAmount: number;
+  currency: 'USD' | 'NGN';
+  note?: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'countered';
   createdAt: string;
 }
 

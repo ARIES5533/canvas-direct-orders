@@ -2,6 +2,7 @@
 import { Artwork } from '@/lib/types';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { formatPrice } from '@/lib/currency';
 import { useState } from 'react';
 
 interface ArtworkCardProps {
@@ -9,7 +10,7 @@ interface ArtworkCardProps {
 }
 
 const ArtworkCard = ({ artwork }: ArtworkCardProps) => {
-  const { id, title, imageUrls, price, category, available, medium } = artwork;
+  const { id, title, imageUrls, price, currency, category, available, medium } = artwork;
   const [imageError, setImageError] = useState(false);
   const primaryImage = imageUrls[0] || '';
 
@@ -41,7 +42,7 @@ const ArtworkCard = ({ artwork }: ArtworkCardProps) => {
           </Badge>
         </div>
         <p className="text-gray-600 text-sm mt-1">{medium}</p>
-        <p className="font-medium mt-2">${price.toLocaleString()}</p>
+        <p className="font-medium mt-2">{formatPrice(price, currency)}</p>
       </div>
     </Link>
   );

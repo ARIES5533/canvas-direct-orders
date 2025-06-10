@@ -14,6 +14,7 @@ export type Database = {
           available: boolean
           category: string
           created_at: string
+          currency: string | null
           description: string
           dimensions: string
           featured: boolean
@@ -28,6 +29,7 @@ export type Database = {
           available?: boolean
           category: string
           created_at?: string
+          currency?: string | null
           description: string
           dimensions: string
           featured?: boolean
@@ -42,6 +44,7 @@ export type Database = {
           available?: boolean
           category?: string
           created_at?: string
+          currency?: string | null
           description?: string
           dimensions?: string
           featured?: boolean
@@ -53,6 +56,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      offers: {
+        Row: {
+          artwork_id: string
+          created_at: string | null
+          currency: string
+          email: string
+          id: string
+          name: string
+          note: string | null
+          offer_amount: number
+          phone: string | null
+          status: string | null
+        }
+        Insert: {
+          artwork_id: string
+          created_at?: string | null
+          currency?: string
+          email: string
+          id?: string
+          name: string
+          note?: string | null
+          offer_amount: number
+          phone?: string | null
+          status?: string | null
+        }
+        Update: {
+          artwork_id?: string
+          created_at?: string | null
+          currency?: string
+          email?: string
+          id?: string
+          name?: string
+          note?: string | null
+          offer_amount?: number
+          phone?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orders: {
         Row: {

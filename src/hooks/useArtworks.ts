@@ -25,6 +25,7 @@ export const useArtworks = () => {
         dimensions: artwork.dimensions,
         medium: artwork.medium,
         price: artwork.price,
+        currency: artwork.currency || 'USD',
         available: artwork.available,
         featured: artwork.featured,
         category: artwork.category,
@@ -44,6 +45,7 @@ export const useArtworks = () => {
           dimensions: artwork.dimensions,
           medium: artwork.medium,
           price: artwork.price,
+          currency: artwork.currency,
           available: artwork.available,
           featured: artwork.featured,
           category: artwork.category
@@ -79,6 +81,7 @@ export const useArtworks = () => {
       if (artwork.dimensions !== undefined) updateData.dimensions = artwork.dimensions;
       if (artwork.medium !== undefined) updateData.medium = artwork.medium;
       if (artwork.price !== undefined) updateData.price = artwork.price;
+      if (artwork.currency !== undefined) updateData.currency = artwork.currency;
       if (artwork.available !== undefined) updateData.available = artwork.available;
       if (artwork.featured !== undefined) updateData.featured = artwork.featured;
       if (artwork.category !== undefined) updateData.category = artwork.category;

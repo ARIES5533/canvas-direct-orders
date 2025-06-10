@@ -10,9 +10,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageSquare, DollarSign } from "lucide-react";
 import OrderForm from "@/components/OrderForm";
+import MakeOfferForm from "@/components/MakeOfferForm";
 import ArtworkImageGallery from "@/components/artwork/ArtworkImageGallery";
+import { formatPrice } from "@/lib/currency";
 
 const ArtworkPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -81,26 +83,52 @@ const ArtworkPage = () => {
                 </div>
                 <div className="flex justify-between">
                   <dt className="font-medium">Price</dt>
-                  <dd className="text-xl font-medium">${artwork.price.toLocaleString()}</dd>
+                  <dd className="text-xl font-medium">{formatPrice(artwork.price, artwork.currency)}</dd>
                 </div>
               </dl>
             </div>
             
-            <div className="pt-6">
+            <div className="pt-6 space-y-3">
               {artwork.available ? (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="lg" className="w-full font-serif">
-                      Order This Artwork
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                      <DialogTitle>Order "{artwork.title}"</DialogTitle>
-                    </DialogHeader>
-                    <OrderForm artworkId={artwork.id} artworkTitle={artwork.title} />
-                  </DialogContent>
-                </Dialog>
+                <>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="lg" className="w-full font-serif">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Order This Artwork
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>Order "{artwork.title}"</DialogTitle>
+                      </DialogHeader>
+                      <OrderForm artworkId={artwork.id} artworkTitle={artwork.title} />
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="lg" variant="outline" className="w-full font-serif">
+                        <DollarSign className="mr-2 h-4 w-4" />
+                        Make An Offer
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>Make An Offer for "{artwork.title}"</DialogTitle>
+                        <p className="text-sm text-gray-600">
+                          Listed at {formatPrice(artwork.price, artwork.currency)}
+                        </p>
+                      </DialogHeader>
+                      <MakeOfferForm 
+                        artworkId={artwork.id} 
+                        artworkTitle={artwork.title}
+                        artworkPrice={artwork.price}
+                        artworkCurrency={artwork.currency}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </>
               ) : (
                 <Button 
                   size="lg"

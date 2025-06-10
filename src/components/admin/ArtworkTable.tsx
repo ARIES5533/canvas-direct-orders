@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import ArtworkActions from "./ArtworkActions";
+import { formatPrice } from "@/lib/currency";
 import { useState } from "react";
 
 interface ArtworkTableProps {
@@ -65,7 +66,7 @@ const ArtworkTable = ({ artworks, onUpdate, onDelete }: ArtworkTableProps) => {
                 </TableCell>
                 <TableCell className="font-medium">{artwork.title}</TableCell>
                 <TableCell className="capitalize">{artwork.category}</TableCell>
-                <TableCell>${artwork.price.toLocaleString()}</TableCell>
+                <TableCell>{formatPrice(artwork.price, artwork.currency)}</TableCell>
                 <TableCell>
                   <Badge variant={artwork.available ? "outline" : "secondary"}>
                     {artwork.available ? "Available" : "Sold"}

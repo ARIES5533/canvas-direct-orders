@@ -19,6 +19,7 @@ const newArtworkSchema = z.object({
   dimensions: z.string().min(2, 'Dimensions are required'),
   medium: z.string().min(2, 'Medium is required'),
   price: z.coerce.number().positive('Price must be a positive number'),
+  currency: z.enum(['USD', 'NGN']),
   available: z.boolean(),
   featured: z.boolean(),
   category: z.enum(['landscape', 'portrait', 'abstract', 'still-life'] as const),
@@ -54,6 +55,7 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
       dimensions: artwork?.dimensions || '',
       medium: artwork?.medium || '',
       price: artwork?.price || 0,
+      currency: artwork?.currency || 'USD',
       available: artwork?.available ?? true,
       featured: artwork?.featured ?? false,
       category: (artwork?.category as Category) || 'landscape',
@@ -128,6 +130,44 @@ const ArtworkForm = ({ artwork, onSubmit, isLoading = false }: ArtworkFormProps)
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" placeholder="1000" min="0" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Currency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="USD">USD ($)</SelectItem>
+                            <SelectItem value="NGN">NGN (₦)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               <div>
