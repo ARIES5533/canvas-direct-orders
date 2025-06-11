@@ -1,26 +1,25 @@
 
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/lib/database';
 import { Order } from '@/lib/types';
 import { toast } from '@/components/ui/use-toast';
 
 export const useOrders = () => {
   const createOrderMutation = useMutation({
     mutationFn: async (order: Omit<Order, 'id' | 'createdAt'>) => {
-      const { data, error } = await supabase
-        .from('orders')
-        .insert({
-          artwork_id: order.artworkId,
-          name: order.name,
-          email: order.email,
-          phone: order.phone,
-          message: order.message
-        })
-        .select()
-        .single();
+      const result = await db.query(`
+        INSERT INTO orders (artwork_id, name, email, phone, message)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+      `, [
+        order.artworkId,
+        order.name,
+        order.email,
+        order.phone,
+        order.message
+      ]);
       
-      if (error) throw error;
-      return data;
+      return result.rows[0];
     },
     onSuccess: () => {
       toast({

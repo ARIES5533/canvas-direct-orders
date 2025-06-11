@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/lib/database';
 import { Artwork } from '@/lib/types';
 import { toast } from '@/components/ui/use-toast';
 
@@ -10,51 +10,50 @@ export const useArtworks = () => {
   const { data: artworks = [], isLoading, error } = useQuery({
     queryKey: ['artworks'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('artworks')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const result = await db.query(`
+        SELECT id, title, description, image_urls, dimensions, medium, 
+               price, currency, available, featured, category, created_at
+        FROM artworks 
+        ORDER BY created_at DESC
+      `);
       
-      if (error) throw error;
-      
-      return data.map(artwork => ({
-        id: artwork.id,
-        title: artwork.title,
-        description: artwork.description,
-        imageUrls: artwork.image_urls || [],
-        dimensions: artwork.dimensions,
-        medium: artwork.medium,
-        price: artwork.price,
-        currency: artwork.currency || 'USD',
-        available: artwork.available,
-        featured: artwork.featured,
-        category: artwork.category,
-        createdAt: artwork.created_at
+      return result.rows.map(row => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        imageUrls: row.image_urls || [],
+        dimensions: row.dimensions,
+        medium: row.medium,
+        price: parseFloat(row.price),
+        currency: row.currency || 'USD',
+        available: row.available,
+        featured: row.featured,
+        category: row.category,
+        createdAt: row.created_at
       })) as Artwork[];
     },
   });
 
   const addArtworkMutation = useMutation({
     mutationFn: async (artwork: Omit<Artwork, 'id' | 'createdAt'>) => {
-      const { data, error } = await supabase
-        .from('artworks')
-        .insert({
-          title: artwork.title,
-          description: artwork.description,
-          image_urls: artwork.imageUrls,
-          dimensions: artwork.dimensions,
-          medium: artwork.medium,
-          price: artwork.price,
-          currency: artwork.currency,
-          available: artwork.available,
-          featured: artwork.featured,
-          category: artwork.category
-        })
-        .select()
-        .single();
+      const result = await db.query(`
+        INSERT INTO artworks (title, description, image_urls, dimensions, medium, price, currency, available, featured, category)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING *
+      `, [
+        artwork.title,
+        artwork.description,
+        artwork.imageUrls,
+        artwork.dimensions,
+        artwork.medium,
+        artwork.price,
+        artwork.currency,
+        artwork.available,
+        artwork.featured,
+        artwork.category
+      ]);
       
-      if (error) throw error;
-      return data;
+      return result.rows[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['artworks'] });
@@ -74,27 +73,62 @@ export const useArtworks = () => {
 
   const updateArtworkMutation = useMutation({
     mutationFn: async ({ id, ...artwork }: { id: string } & Partial<Artwork>) => {
-      const updateData: any = {};
-      if (artwork.title !== undefined) updateData.title = artwork.title;
-      if (artwork.description !== undefined) updateData.description = artwork.description;
-      if (artwork.imageUrls !== undefined) updateData.image_urls = artwork.imageUrls;
-      if (artwork.dimensions !== undefined) updateData.dimensions = artwork.dimensions;
-      if (artwork.medium !== undefined) updateData.medium = artwork.medium;
-      if (artwork.price !== undefined) updateData.price = artwork.price;
-      if (artwork.currency !== undefined) updateData.currency = artwork.currency;
-      if (artwork.available !== undefined) updateData.available = artwork.available;
-      if (artwork.featured !== undefined) updateData.featured = artwork.featured;
-      if (artwork.category !== undefined) updateData.category = artwork.category;
+      const updates: string[] = [];
+      const values: any[] = [];
+      let paramIndex = 1;
 
-      const { data, error } = await supabase
-        .from('artworks')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
+      if (artwork.title !== undefined) {
+        updates.push(`title = $${paramIndex++}`);
+        values.push(artwork.title);
+      }
+      if (artwork.description !== undefined) {
+        updates.push(`description = $${paramIndex++}`);
+        values.push(artwork.description);
+      }
+      if (artwork.imageUrls !== undefined) {
+        updates.push(`image_urls = $${paramIndex++}`);
+        values.push(artwork.imageUrls);
+      }
+      if (artwork.dimensions !== undefined) {
+        updates.push(`dimensions = $${paramIndex++}`);
+        values.push(artwork.dimensions);
+      }
+      if (artwork.medium !== undefined) {
+        updates.push(`medium = $${paramIndex++}`);
+        values.push(artwork.medium);
+      }
+      if (artwork.price !== undefined) {
+        updates.push(`price = $${paramIndex++}`);
+        values.push(artwork.price);
+      }
+      if (artwork.currency !== undefined) {
+        updates.push(`currency = $${paramIndex++}`);
+        values.push(artwork.currency);
+      }
+      if (artwork.available !== undefined) {
+        updates.push(`available = $${paramIndex++}`);
+        values.push(artwork.available);
+      }
+      if (artwork.featured !== undefined) {
+        updates.push(`featured = $${paramIndex++}`);
+        values.push(artwork.featured);
+      }
+      if (artwork.category !== undefined) {
+        updates.push(`category = $${paramIndex++}`);
+        values.push(artwork.category);
+      }
+
+      updates.push(`updated_at = NOW()`);
+      values.push(id);
+
+      const result = await db.query(`
+        UPDATE artworks 
+        SET ${updates.join(', ')}
+        WHERE id = $${paramIndex}
+        RETURNING *
+      `, values);
       
-      if (error) throw error;
-      return data;
+      return result.rows[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['artworks'] });
@@ -114,12 +148,7 @@ export const useArtworks = () => {
 
   const deleteArtworkMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('artworks')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
+      await db.query('DELETE FROM artworks WHERE id = $1', [id]);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['artworks'] });

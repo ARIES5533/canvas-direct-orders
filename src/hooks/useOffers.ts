@@ -1,28 +1,27 @@
 
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/lib/database';
 import { Offer } from '@/lib/types';
 import { toast } from '@/components/ui/use-toast';
 
 export const useOffers = () => {
   const createOfferMutation = useMutation({
     mutationFn: async (offer: Omit<Offer, 'id' | 'createdAt' | 'status'>) => {
-      const { data, error } = await supabase
-        .from('offers')
-        .insert({
-          artwork_id: offer.artworkId,
-          name: offer.name,
-          email: offer.email,
-          phone: offer.phone,
-          offer_amount: offer.offerAmount,
-          currency: offer.currency,
-          note: offer.note
-        })
-        .select()
-        .single();
+      const result = await db.query(`
+        INSERT INTO offers (artwork_id, name, email, phone, offer_amount, currency, note)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+      `, [
+        offer.artworkId,
+        offer.name,
+        offer.email,
+        offer.phone,
+        offer.offerAmount,
+        offer.currency,
+        offer.note
+      ]);
       
-      if (error) throw error;
-      return data;
+      return result.rows[0];
     },
     onSuccess: () => {
       toast({

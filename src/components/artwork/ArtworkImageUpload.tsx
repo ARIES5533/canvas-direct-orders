@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { supabase } from '@/integrations/supabase/client';
+import { uploadImageToS3 } from '@/lib/s3-client';
 import { Upload, X } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
@@ -18,23 +18,8 @@ const ArtworkImageUpload = ({ imageUrls, onImageUrlsChange }: ArtworkImageUpload
     try {
       setUploading(true);
       
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from('artwork-images')
-        .upload(filePath, file);
-
-      if (error) {
-        throw error;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('artwork-images')
-        .getPublicUrl(data.path);
-
-      const newUrls = [...imageUrls, publicUrl];
+      const imageUrl = await uploadImageToS3(file);
+      const newUrls = [...imageUrls, imageUrl];
       onImageUrlsChange(newUrls);
       
       toast({
